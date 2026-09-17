@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusBite - Smart Canteen & Virtual Wallet Engine</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .animate-pulse-subtle { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                        <i class="fa-solid fa-utensils text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-extrabold text-slate-900 tracking-tight text-lg">CampusBite</span>
+                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 rounded-full border border-slate-200">Offline-First</span>
+                        </div>
+                        <p class="text-xs text-slate-500 hidden sm:block">Tokenless Canteen & Virtual Wallet System</p>
+                    </div>
+                </div>
+
+                <!-- Logged In Role Badge & Switcher Info -->
+                <div id="header-auth-info" class="hidden flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200/80">
+                    <span class="text-xs text-slate-500 font-medium hidden sm:inline">Signed in as:</span>
+                    <span id="active-user-role-badge" class="px-2.5 py-0.5 text-xs font-bold rounded-lg bg-brand-100 text-brand-800 border border-brand-200">
+                        Student
+                    </span>
+                    <span id="active-user-display-name" class="text-xs font-bold text-slate-800">
+                        Alex Johnson
+                    </span>
+                </div>
+
+                <!-- Right Side Actions: Active Profile & Sign Out Button -->
+                <div id="header-right-actions" class="hidden flex items-center gap-3">
+                    <div id="student-header-wallet" class="flex items-center gap-3 bg-brand-50 border border-brand-200/60 rounded-xl px-3 py-1.5">
+                        <div class="text-right">
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-brand-700">Wallet Balance</div>
+                            <div class="text-sm font-extrabold text-brand-900" id="header-balance-display">₹350.00</div>
+                        </div>
+                        <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <button onclick="handleLogout()" class="flex items-center gap-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-sm">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span class="hidden sm:inline">Sign Out</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ========================================== -->
+        <!-- VIEW 0: LOGIN & PORTAL SCREEN              -->
+        <!-- ========================================== -->
+        <div id="view-login" class="max-w-md mx-auto my-6 space-y-6">
+            
+            <div class="text-center space-y-2">
+                <div class="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-400 items-center justify-center text-white shadow-xl shadow-brand-500/20 mb-2">
+                    <i class="fa-solid fa-utensils text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Welcome to CampusBite</h1>
+                <p class="text-xs text-slate-500">Select your account portal below to access your dashboard.</p>
+            </div>
+
+            <!-- Login Card Container -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-lg space-y-5">
+                
+                <!-- Role Selector Tabs -->
+                <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+                    <button id="login-tab-student" onclick="selectLoginRole('student')" class="py-2 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-1">
+                        <i class="fa-solid fa-user-graduate text-brand-600"></i>
+                        <span>Student</span>
+                    </button>
+                    <button id="login-tab-staff" onclick="selectLoginRole('staff')" class="py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900 flex flex-col sm:flex-row items-center justify-center gap-1">
+                        <i class="fa-solid fa-fire-burner text-amber-500"></i>
+                        <span>Kitchen</span>
+                    </button>
+                    <button id="login-tab-desk" onclick="selectLoginRole('desk')" class="py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900 flex flex-col sm:flex-row items-center justify-center gap-1">
+                        <i class="fa-solid fa-cash-register text-blue-500"></i>
+                        <span>Cashier</span>
+                    </button>
+                </div>
+
+                <!-- STUDENT EMAIL VERIFICATION & SIGN-IN FORM -->
+                <div id="login-form-student" class="space-y-4">
+
+                    <!-- Existing / New Student -->
+                    <div class="grid grid-cols-2 gap-2 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                        <button id="student-mode-login" onclick="setStudentAuthMode('login')"
+                            class="py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm">
+                            Existing Student
+                        </button>
+                        <button id="student-mode-signup" onclick="setStudentAuthMode('signup')"
+                            class="py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900">
+                            New Student
+                        </button>
+                    </div>
+
+                    <!-- STEP 1 -->
+                    <div id="student-email-step-1" class="space-y-3">
+                        <div class="bg-brand-50 border border-brand-200 rounded-xl p-3 text-xs text-brand-900">
+                            <div class="font-bold flex items-center gap-2">
+                                <i class="fa-solid fa-envelope-circle-check text-brand-600"></i>
+                                Student Email Verification
+                            </div>
+                            <p class="text-[11px] text-brand-700 mt-1">
+                                Enter your email and verify the 6-digit OTP to continue.
+                            </p>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Student Email</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                                <input type="email" id="login-student-email"
+                                    placeholder="Enter your university email"
+                                    class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl pl-9 pr-3 py-2.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                        </div>
+
+                        <!-- Only shown for new students -->
+                        <div id="new-student-fields" class="hidden space-y-2 border-t border-dashed border-slate-200 pt-3">
+                            <span class="text-[10px] font-bold uppercase text-brand-700 tracking-wider">
+                                Create Student Account
+                            </span>
+                            <input type="text" id="reg-student-name" placeholder="Full Name"
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <input type="text" id="reg-student-dept"
+                                placeholder="Department / Year (e.g. CSE 1st Year)"
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <button onclick="sendStudentEmailOTP()"
+                            class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md shadow-brand-600/20 active:scale-[0.99] transition-all text-xs flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span id="student-send-otp-label">Send OTP to Email</span>
+                        </button>
+
+                        <p class="text-[10px] text-center text-slate-400">
+                            Prototype mode: OTP delivery is simulated. Real email delivery will be connected through the backend.
+                        </p>
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div id="student-email-step-2" class="hidden space-y-4">
+                        <div class="bg-brand-50 border border-brand-200 rounded-xl p-3 text-xs text-brand-900 flex items-start gap-2">
+                            <i class="fa-solid fa-circle-check text-brand-600 text-sm mt-0.5"></i>
+                            <div>
+                                <div class="font-bold">OTP sent</div>
+                                <div class="text-[11px] text-brand-700">
+                                    Verify the code for
+                                    <strong id="sent-email-display" class="font-mono">student@email.com</strong>.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 block text-center">
+                                6-Digit Email OTP
+                            </label>
+                            <input type="text" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                                id="login-email-otp-input" placeholder="123456"
+                                class="w-full bg-slate-50 border-2 border-brand-300 text-slate-900 text-xl font-mono font-black tracking-[0.4em] text-center rounded-xl py-2.5 focus:bg-white focus:outline-none focus:border-brand-600">
+                            <div class="text-[11px] text-center text-slate-400">
+                                Prototype OTP:
+                                <strong id="demo-otp-code" class="font-mono text-brand-700">------</strong>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="backToEmailStep1()"
+                                class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs">
+                                Back
+                            </button>
+                            <button onclick="verifyStudentEmailOTP()"
+                                class="w-2/3 bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl shadow-md shadow-brand-600/20 active:scale-[0.99] transition-all text-xs flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-shield-check"></i>
+                                <span>Verify & Continue</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KITCHEN STAFF LOGIN FORM -->
+                <div id="login-form-staff" class="hidden space-y-4">
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 font-medium">
+                        <i class="fa-solid fa-circle-info text-amber-600"></i> Kitchen terminal provides real-time orders KDS and menu inventory control.
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Kitchen Staff Passcode</label>
+                        <input type="password" maxlength="4" placeholder="Enter Kitchen Staff PIN" id="login-staff-pin" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold tracking-widest text-center rounded-xl py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+
+                    <button onclick="handleLogin('staff')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md shadow-amber-500/20 active:scale-[0.99] transition-all text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-fire-burner"></i>
+                        <span>Open Kitchen Terminal (KDS)</span>
+                    </button>
+                </div>
+
+                <!-- CASHIER LOGIN FORM -->
+                <div id="login-form-desk" class="hidden space-y-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 font-medium">
+                        <i class="fa-solid fa-circle-info text-blue-600"></i> Cashier desk terminal accepts physical cash deposits to credit student wallets.
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Cashier Desk Passcode</label>
+                        <input type="password" maxlength="4" placeholder="Enter Cashier PIN" id="login-desk-pin" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold tracking-widest text-center rounded-xl py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <button onclick="handleLogin('desk')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.99] transition-all text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cash-register"></i>
+                        <span>Open Physical Cash Desk</span>
+                    </button>
+                </div>
+
+                <!-- Quick One-Click Demo Direct Login Shortcuts -->
+                <div class="border-t border-slate-100 pt-4 space-y-2">
+                    <div class="text-[10px] uppercase font-bold text-slate-400 text-center tracking-wider">Quick Demo Shortcuts</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="quickDemoLogin('student', 'alex@campus.edu')" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 py-1.5 px-2 rounded-lg text-[10px] font-bold text-center">
+                            Alex (Student Email)
+                        </button>
+                        <button onclick="quickDemoLogin('staff')" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 py-1.5 px-2 rounded-lg text-[10px] font-bold text-center">
+                            Kitchen Staff
+                        </button>
+                        <button onclick="quickDemoLogin('desk')" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 py-1.5 px-2 rounded-lg text-[10px] font-bold text-center">
+                            Cash Desk
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- VIEW 1: STUDENT INTERFACE                   -->
+        <!-- ========================================== -->
+        <div id="view-student" class="space-y-6">
+            
+            <!-- Quick Stats & Scheduled Order Slot Picker Bar -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- Wallet Summary Card -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-brand-500/10 rounded-full blur-xl pointer-events-none"></div>
+                    <div>
+                        <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                            <span>Campus Virtual Ledger</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] border border-emerald-500/30">TOKENLESS OK</span>
+                        </div>
+                        <div class="mt-2 text-3xl font-black tracking-tight" id="student-card-balance">₹350.00</div>
+                        <p class="text-xs text-slate-400 mt-1" id="student-card-name">Alex Johnson • CSE 3rd Year</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs">
+                        <button onclick="openLedgerModal()" class="text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-receipt text-xs"></i> View Expense History
+                        </button>
+                        <span class="text-slate-400 text-[11px]">Top-up at Desk #01</span>
+                    </div>
+                </div>
+
+                <!-- Pre-order Break Slot Selection (Scheduled Orders) -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                                <i class="fa-regular fa-clock text-brand-600"></i> Pickup Time Slot
+                            </h3>
+                            <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Scheduled Ordering</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-1">Select your break time to prevent counter rush queues.</p>
+                        
+                        <div class="grid grid-cols-3 gap-2 mt-3" id="slot-picker-container">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                    <div class="mt-3 text-[11px] text-slate-500 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-info text-blue-500"></i>
+                        <span>Kitchen starts preparing 10 mins before slot.</span>
+                    </div>
+                </div>
+
+                <!-- Active Order & Cipher Status Quick Widget -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between relative overflow-hidden" id="active-order-summary-widget">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Menu Filtering and Catalog Section -->
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                
+                <!-- Category Pills -->
+                <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2 md:pb-0" id="category-pills">
+                    <!-- Dynamic Pills -->
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="flex items-center gap-2 min-w-[240px]">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="menu-search-input" onkeyup="filterMenu()" placeholder="Search items (e.g., Samosa, Coffee)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Grid + Order Cart Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Menu Items Grid (2 Columns on large screens) -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <span>Today's Live Menu</span>
+                            <span class="text-xs font-normal text-slate-500" id="item-count-badge">(0 items)</span>
+                        </h2>
+                        <span class="text-xs text-slate-500">Stock updates live with orders</span>
+                    </div>
+
+                    <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Menu Cards Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Cart & Checkout Sidebar -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm sticky top-20 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-basket-shopping text-brand-600"></i> Your Tray
+                            </h3>
+                            <button onclick="clearCart()" class="text-xs text-slate-400 hover:text-rose-600 transition-colors">Clear</button>
+                        </div>
+
+                        <!-- Selected Slot Badge in Cart -->
+                        <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200/80 flex items-center justify-between text-xs">
+                            <span class="text-slate-500 font-medium">Pickup Target:</span>
+                            <span id="cart-selected-slot-text" class="font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">Morning Recess (10:15 AM)</span>
+                        </div>
+
+                        <!-- Cart Items List -->
+                        <div id="cart-items-container" class="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                            <!-- Injected dynamically -->
+                        </div>
+
+                        <!-- Billing Summary -->
+                        <div class="border-t border-slate-100 pt-3 space-y-2 text-xs">
+                            <div class="flex justify-between text-slate-500">
+                                <span>Subtotal</span>
+                                <span id="cart-subtotal" class="font-medium text-slate-800">₹0.00</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500">
+                                <span>Taxes & Service Fee</span>
+                                <span class="text-emerald-600 font-medium">₹0.00 (Waived)</span>
+                            </div>
+                            <div class="flex justify-between text-sm font-extrabold text-slate-900 border-t border-dashed border-slate-200 pt-2">
+                                <span>Grand Total</span>
+                                <span id="cart-total" class="text-brand-700">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Wallet Check Warning / Order Button -->
+                        <div id="checkout-action-area">
+                            <button id="btn-place-order" onclick="placeOrder()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md shadow-brand-600/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm">
+                                <span>Confirm & Generate Cipher OTP</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+
+                        <div class="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-shield-halved text-brand-600"></i> No paper slips required. Show single-use PIN at desk.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Active Orders Detailed List Section -->
+            <div class="mt-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-brand-600"></i> My Active & Recent Orders
+                    </h3>
+                    <span class="text-xs text-slate-500">Auto-refreshes in real-time</span>
+                </div>
+
+                <div id="student-orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Order progress cards injected here -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: KITCHEN STAFF & INVENTORY VIEW      -->
+        <!-- ========================================== -->
+        <div id="view-staff" class="hidden space-y-6">
+            
+            <!-- Kitchen Header Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 text-white p-5 rounded-2xl shadow-md">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-black tracking-tight">Kitchen Live Terminal (KDS)</h2>
+                        <span class="px-2.5 py-0.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 font-semibold text-xs rounded-full">Staff Portal</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Manage kitchen queue, verify student pickup OTPs, and control live stock inventory.</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openEODReportModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-chart-pie"></i> EOD Analytics & Summary
+                    </button>
+                    <button onclick="resetDailyMenuTemplate()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-rotate text-amber-400"></i> Daily Stock Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Switcher: Orders Queue vs Stock Management -->
+            <div class="flex border-b border-slate-200">
+                <button id="tab-kds-orders" onclick="switchStaffTab('orders')" class="px-5 py-3 border-b-2 border-brand-600 font-bold text-xs text-brand-600 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i> Orders Management Queue (<span id="kds-pending-count">0</span>)
+                </button>
+                <button id="tab-kds-inventory" onclick="switchStaffTab('inventory')" class="px-5 py-3 border-b-2 border-transparent font-bold text-xs text-slate-500 hover:text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-boxes-stacked"></i> Menu & Stock Inventory
+                </button>
+            </div>
+
+            <!-- KDS Orders Queue View -->
+            <div id="staff-tab-orders" class="space-y-4">
+                
+                <!-- Filter Tabs for Orders -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                    <button onclick="filterKDSOrders('ALL')" class="kds-filter-btn active bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">All Orders</button>
+                    <button onclick="filterKDSOrders('RECEIVED')" class="kds-filter-btn bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold">Received <span class="bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded-full text-[10px]" id="count-received">0</span></button>
+                    <button onclick="filterKDSOrders('PREPARING')" class="kds-filter-btn bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold">Preparing <span class="bg-amber-100 text-amber-700 px-1.5 py-0.2 rounded-full text-[10px]" id="count-preparing">0</span></button>
+                    <button onclick="filterKDSOrders('READY')" class="kds-filter-btn bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold">Ready for Pickup <span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full text-[10px]" id="count-ready">0</span></button>
+                    <button onclick="filterKDSOrders('COMPLETED')" class="kds-filter-btn bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold">Completed</button>
+                </div>
+
+                <!-- Orders Grid -->
+                <div id="kds-orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Order Cards dynamically injected -->
+                </div>
+            </div>
+
+            <!-- Stock Inventory Management Tab -->
+            <div id="staff-tab-inventory" class="hidden space-y-4">
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Instant Stock & Inventory Controls</h3>
+                            <p class="text-xs text-slate-500">Toggle item availability or update counts. Items below 5 stock highlight in yellow/red alerts.</p>
+                        </div>
+                        <button onclick="openAddItemModal()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add New Menu Item
+                        </button>
+                    </div>
+
+                    <!-- Inventory Table -->
+                    <div class="mt-4 overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="py-3 px-4">Item Details</th>
+                                    <th class="py-3 px-4">Category</th>
+                                    <th class="py-3 px-4">Price</th>
+                                    <th class="py-3 px-4">Stock Count</th>
+                                    <th class="py-3 px-4">Availability</th>
+                                    <th class="py-3 px-4 text-right">Quick Stock Counter</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- VIEW 3: CASH DESK & WALLET RECHARGE TERMINAL -->
+        <!-- ========================================== -->
+        <div id="view-desk" class="hidden space-y-6">
+            <div class="max-w-2xl mx-auto bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                <div class="flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-cash-register"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Physical Cash Desk Terminal</h2>
+                        <p class="text-xs text-slate-500">Accept physical cash deposits and credit virtual student wallets instantly.</p>
+                    </div>
+                </div>
+
+                <!-- Student Lookup -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Select Student Account</label>
+                    <select id="desk-student-select" onchange="loadDeskStudentData()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Selected Student Card Preview -->
+                <div id="desk-student-card" class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-2xl p-5 shadow-md space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-xs text-blue-200 font-mono" id="desk-card-roll">ROLL #102</div>
+                            <div class="text-lg font-bold" id="desk-card-name">Alex Johnson</div>
+                        </div>
+                        <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 font-bold text-xs rounded-lg border border-emerald-500/30">ACTIVE LEDGER</span>
+                    </div>
+                    <div class="pt-2 border-t border-blue-800/80 flex items-end justify-between">
+                        <div>
+                            <div class="text-[10px] text-blue-300 uppercase font-semibold tracking-wider">Current Wallet Balance</div>
+                            <div class="text-2xl font-black" id="desk-card-balance">₹350.00</div>
+                        </div>
+                        <div class="text-xs text-blue-200" id="desk-card-dept">CSE 3rd Year</div>
+                    </div>
+                </div>
+
+                <!-- Cash Top-Up Controls -->
+                <div class="space-y-3">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Cash Deposit Amount (₹)</label>
+                    
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setTopUpAmount(50)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 rounded-xl text-xs transition-all border border-slate-200">+ ₹50</button>
+                        <button onclick="setTopUpAmount(100)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 rounded-xl text-xs transition-all border border-slate-200">+ ₹100</button>
+                        <button onclick="setTopUpAmount(200)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 rounded-xl text-xs transition-all border border-slate-200">+ ₹200</button>
+                        <button onclick="setTopUpAmount(500)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 rounded-xl text-xs transition-all border border-slate-200">+ ₹500</button>
+                    </div>
+
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-2.5 text-slate-400 font-bold text-sm">₹</span>
+                        <input type="number" id="topup-amount-input" placeholder="Or enter custom cash amount..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <button onclick="processCashTopUp()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Confirm Cash Deposit & Credit Wallet</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL 1: OTP PICKUP VERIFICATION MODAL -->
+    <div id="modal-otp-verify" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-150">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2 text-slate-900 font-bold text-base">
+                    <i class="fa-solid fa-shield-cat text-amber-500"></i>
+                    <span>Verify Pickup Cipher OTP</span>
+                </div>
+                <button onclick="closeModal('modal-otp-verify')" class="text-slate-400 hover:text-slate-600 text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="text-center space-y-2">
+                <p class="text-xs text-slate-600">Ask the student for their single-use 4-digit security code shown on their app.</p>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 inline-block text-left w-full text-xs space-y-1">
+                    <div class="flex justify-between"><span class="text-slate-400">Order ID:</span> <span id="otp-modal-order-id" class="font-mono font-bold text-slate-800">#ORD-000</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Student:</span> <span id="otp-modal-student-name" class="font-bold text-slate-800">--</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Items:</span> <span id="otp-modal-items-summary" class="font-medium text-slate-700">--</span></div>
+                </div>
+            </div>
+
+            <!-- OTP Input Box -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500 block text-center">Enter 4-Digit Cipher Code</label>
+                <div class="flex justify-center gap-2">
+                    <input type="text" maxlength="4" id="otp-input-field" placeholder="1234" class="w-40 text-center font-mono text-2xl tracking-[0.5em] font-extrabold bg-slate-50 border-2 border-slate-300 rounded-xl py-2 focus:bg-white focus:border-brand-500 focus:outline-none">
+                </div>
+                <div id="otp-error-msg" class="text-center text-xs text-rose-600 font-semibold hidden">Invalid Cipher Code! Try again.</div>
+            </div>
+
+            <button onclick="confirmOTPAndDeliver()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md transition-all text-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-check"></i> Verify & Handover Food
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: STUDENT EXPENSE LEDGER MODAL -->
+    <div id="modal-ledger" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2 text-slate-900 font-bold text-base">
+                    <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
+                    <span>Student Expense Ledger</span>
+                </div>
+                <button onclick="closeModal('modal-ledger')" class="text-slate-400 hover:text-slate-600 text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="text-xs text-slate-500 flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span>Account: <strong id="ledger-student-name" class="text-slate-800">--</strong></span>
+                <span>Current Balance: <strong id="ledger-student-balance" class="text-brand-700">₹0.00</strong></span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-2" id="ledger-history-list">
+                <!-- Transaction items injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: END-OF-DAY ANALYTICS REPORT MODAL -->
+    <div id="modal-eod-report" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-indigo-600"></i> End-of-Day Canteen Report
+                    </h3>
+                    <p class="text-xs text-slate-500" id="eod-report-date">Generated on Today</p>
+                </div>
+                <button onclick="closeModal('modal-eod-report')" class="text-slate-400 hover:text-slate-600 text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Key Metrics Grid -->
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                    <div class="text-[10px] uppercase font-bold text-emerald-700">Total Revenue</div>
+                    <div class="text-xl font-black text-emerald-900 mt-1" id="eod-metric-revenue">₹0.00</div>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <div class="text-[10px] uppercase font-bold text-blue-700">Orders Processed</div>
+                    <div class="text-xl font-black text-blue-900 mt-1" id="eod-metric-orders">0</div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <div class="text-[10px] uppercase font-bold text-amber-700">Wasted / Leftover</div>
+                    <div class="text-xl font-black text-amber-900 mt-1" id="eod-metric-wasted">0 items</div>
+                </div>
+            </div>
+
+            <!-- Peak Slot Summary -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Break Slot Demand Breakdown</h4>
+                <div class="space-y-1.5 text-xs" id="eod-slot-breakdown">
+                    <!-- Dynamic slots -->
+                </div>
+            </div>
+
+            <!-- Top Selling Items -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Bestselling Items Summary</h4>
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-slate-100 font-bold text-slate-700">
+                            <tr>
+                                <th class="p-2.5">Item Name</th>
+                                <th class="p-2.5 text-center">Units Sold</th>
+                                <th class="p-2.5 text-right">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eod-bestsellers-table" class="divide-y divide-slate-100">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <button onclick="window.print()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2">
+                <i class="fa-solid fa-print"></i> Print / Save Report Summary
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC & STATE MANAGEMENT        -->
+    <!-- ========================================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        
+        // --- 1. APPLICATION STATE ---
+        // Supabase configuration
+        const SUPABASE_URL = 'https://nctnwilcobxwolhncvyi.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        let currentUser = JSON.parse(localStorage.getItem('cb_current_user')) || null;
+        let currentRole = currentUser ? currentUser.role : null;
+        let activeStudentId = currentUser && currentUser.studentId ? currentUser.studentId : null;
+        let selectedCategory = 'ALL';
+        let selectedSlot = 'Morning Recess (10:15 AM)';
+        let pendingVerifyingOrderId = null;
+        let selectedLoginTab = 'student';
+        let studentAuthMode = 'login';
+        let pendingStudentAuth = null;
+
+        const BREAK_SLOTS = [
+            { id: 'slot_1', label: 'Morning Recess', time: '10:15 AM' },
+            { id: 'slot_2', label: 'Lunch Break', time: '01:00 PM' },
+            { id: 'slot_3', label: 'Afternoon Snack', time: '03:30 PM' }
+        ];
+
+        const MASTER_MENU_TEMPLATE = [
+            { id: 'm1', name: 'Vegetable Samosa (2 pcs)', category: 'Snacks', price: 25, stock: 30, initialStock: 30, image: '🥟', inStock: true },
+            { id: 'm2', name: 'Paneer Butter Masala Meal', category: 'Hot Meals', price: 90, stock: 15, initialStock: 15, image: '🍛', inStock: true },
+            { id: 'm3', name: 'Masala Dosa with Chutney', category: 'Hot Meals', price: 60, stock: 4, initialStock: 15, image: '🥞', inStock: true },
+            { id: 'm4', name: 'Cold Coffee with Ice Cream', category: 'Beverages', price: 45, stock: 20, initialStock: 20, image: '🥤', inStock: true },
+            { id: 'm5', name: 'Grilled Cheese Sandwich', category: 'Snacks', price: 40, stock: 0, initialStock: 20, image: '🥪', inStock: false },
+            { id: 'm6', name: 'Fresh Fruit Juice (Orange)', category: 'Beverages', price: 35, stock: 12, initialStock: 12, image: '🍹', inStock: true },
+            { id: 'm7', name: 'Chocolate Muffin', category: 'Bakery', price: 30, stock: 10, initialStock: 10, image: '🧁', inStock: true },
+            { id: 'm8', name: 'Veg Hakka Noodles', category: 'Hot Meals', price: 70, stock: 18, initialStock: 18, image: '🍜', inStock: true },
+        ];
+
+        let menuItems = [];
+        let students = {};
+        let cart = [];
+        let orders = [];
+        let ledgers = {};
+
+        // Database loader / synchronization
+        async function loadSupabaseState() {
+            const [menuRes, studentRes, orderRes, itemRes, ledgerRes] = await Promise.all([
+                supabaseClient.from('menu_items').select('*').order('id'),
+                supabaseClient.from('students').select('*').order('created_at'),
+                supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
+                supabaseClient.from('order_items').select('*'),
+                supabaseClient.from('wallet_transactions').select('*').order('created_at', { ascending: false })
+            ]);
+
+            const firstError = [menuRes, studentRes, orderRes, itemRes, ledgerRes].find(r => r.error);
+            if (firstError) throw firstError.error;
+
+            if (!menuRes.data.length) {
+                const { error } = await supabaseClient.from('menu_items').insert(MASTER_MENU_TEMPLATE.map(m => ({
+                    name: m.name, category: m.category, price: m.price, stock: m.stock,
+                    initial_stock: m.initialStock, image: m.image, in_stock: m.inStock
+                })));
+                if (error) throw error;
+                return loadSupabaseState();
+            }
+
+            menuItems = menuRes.data.map(m => ({
+                id: String(m.id), name: m.name, category: m.category, price: Number(m.price),
+                stock: Number(m.stock), initialStock: Number(m.initial_stock), image: m.image || '🍽️',
+                inStock: !!m.in_stock
+            }));
+
+            students = {};
+            studentRes.data.forEach(s => {
+                students[s.id] = { id: s.id, name: s.name, email: s.email, roll: s.roll || 'ROLL #' + String(s.id).slice(0, 6),
+                    dept: [s.department, s.year].filter(Boolean).join(' ') || 'CSE', balance: Number(s.wallet_balance || 0),
+                    department: s.department || '', year: s.year || '' };
+            });
+
+            const itemsByOrder = {};
+            itemRes.data.forEach(i => {
+                (itemsByOrder[i.order_id] ||= []).push({ name: i.item_name, price: Number(i.price), qty: Number(i.quantity) });
+            });
+            orders = orderRes.data.map(o => ({
+                id: o.order_number, dbId: o.id, studentId: o.student_id, studentName: o.student_name,
+                slot: o.pickup_slot, items: itemsByOrder[o.id] || [], total: Number(o.total), status: o.status,
+                otp: o.pickup_otp, timestamp: new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }));
+
+            ledgers = {};
+            ledgerRes.data.forEach(t => {
+                (ledgers[t.student_id] ||= []).push({ id: t.id, type: t.type, amount: Number(t.amount), desc: t.description,
+                    date: new Date(t.created_at).toLocaleString(), balanceAfter: Number(t.balance_after) });
+            });
+        }
+
+        async function saveState() {
+            // Kept as a compatibility helper. Persistent writes are performed explicitly by each action.
+            return true;
+        }
+
+        async function refreshAppData() {
+            await loadSupabaseState();
+            renderMenuGrid();
+            renderStudentOrders();
+            renderKDSOrders();
+            renderInventoryTable();
+            populateDeskStudentsDropdown();
+            if (activeStudentId) {
+                updateStudentHeaderAndWallet();
+                renderCart();
+                renderActiveWidgetSummary();
+            }
+        }
+
+        async function initCampusBite() {
+            try {
+                renderSlotPicker();
+                renderCategoryPills();
+                setStudentAuthMode('login');
+                await loadSupabaseState();
+                renderMenuGrid();
+                renderCart();
+                renderStudentOrders();
+                renderKDSOrders();
+                renderInventoryTable();
+                populateDeskStudentsDropdown();
+                checkAuthAndRenderView();
+
+                supabaseClient.channel('campusbite-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, async () => { await refreshAppData(); })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, async () => { await refreshAppData(); })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, async () => { await refreshAppData(); })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, async () => { await refreshAppData(); })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_transactions' }, async () => { await refreshAppData(); })
+                    .subscribe();
+            } catch (error) {
+                console.error('CampusBite Supabase initialization failed:', error);
+                showToast('Database connection failed. Check Supabase URL/key.', 'error');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initCampusBite);
+
+        // --- STUDENT EMAIL VERIFICATION LOGIC ---
+        function setStudentAuthMode(mode) {
+            studentAuthMode = mode;
+
+            const loginBtn = document.getElementById('student-mode-login');
+            const signupBtn = document.getElementById('student-mode-signup');
+            const newFields = document.getElementById('new-student-fields');
+            const label = document.getElementById('student-send-otp-label');
+
+            if (mode === 'signup') {
+                loginBtn.className = "py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900";
+                signupBtn.className = "py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm";
+                newFields.classList.remove('hidden');
+                label.innerText = 'Create Account & Send OTP';
+            } else {
+                loginBtn.className = "py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm";
+                signupBtn.className = "py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900";
+                newFields.classList.add('hidden');
+                label.innerText = 'Send OTP to Email';
+            }
+        }
+
+        function sendStudentEmailOTP() {
+            const email = document.getElementById('login-student-email').value.trim().toLowerCase();
+
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showToast('Please enter a valid email address.', 'warning');
+                return;
+            }
+
+            const existingKey = Object.keys(students).find(
+                key => students[key].email &&
+                       students[key].email.toLowerCase() === email
+            );
+
+            let name = '';
+            let dept = '';
+            let isNew = false;
+
+            if (studentAuthMode === 'signup') {
+                if (existingKey) {
+                    showToast('An account already exists for this email. Select Existing Student.', 'warning');
+                    return;
+                }
+
+                name = document.getElementById('reg-student-name').value.trim();
+                dept = document.getElementById('reg-student-dept').value.trim();
+
+                if (!name || !dept) {
+                    showToast('Enter your full name and department/year.', 'warning');
+                    return;
+                }
+
+                isNew = true;
+            } else {
+                if (!existingKey) {
+                    showToast('Student account not found. Select New Student to create an account.', 'warning');
+                    return;
+                }
+
+                name = students[existingKey].name;
+                dept = students[existingKey].dept;
+            }
+
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+            pendingStudentAuth = {
+                email: email,
+                existingKey: existingKey,
+                isNew: isNew,
+                name: name,
+                dept: dept,
+                otp: otp,
+                createdAt: Date.now()
+            };
+
+            document.getElementById('sent-email-display').innerText = email;
+            document.getElementById('demo-otp-code').innerText = otp;
+            document.getElementById('login-email-otp-input').value = '';
+
+            document.getElementById('student-email-step-1').classList.add('hidden');
+            document.getElementById('student-email-step-2').classList.remove('hidden');
+
+            showToast(`OTP generated for ${email}. Use the prototype OTP shown below.`, 'success');
+            document.getElementById('login-email-otp-input').focus();
+        }
+
+        function backToEmailStep1() {
+            document.getElementById('student-email-step-1').classList.remove('hidden');
+            document.getElementById('student-email-step-2').classList.add('hidden');
+            document.getElementById('login-email-otp-input').value = '';
+        }
+
+        async function verifyStudentEmailOTP() {
+            if (!pendingStudentAuth) { showToast('Please request an OTP first.', 'warning'); return; }
+            const entered = document.getElementById('login-email-otp-input').value.trim();
+            if (Date.now() - pendingStudentAuth.createdAt > 5 * 60 * 1000) {
+                pendingStudentAuth = null; backToEmailStep1(); showToast('OTP expired. Please request a new OTP.', 'warning'); return;
+            }
+            if (!/^\d{6}$/.test(entered) || entered !== pendingStudentAuth.otp) {
+                showToast('Invalid OTP. Please enter the correct 6-digit code.', 'error'); return;
+            }
+            let studentId;
+            if (pendingStudentAuth.isNew) {
+                const { data, error } = await supabaseClient.from('students').insert({
+                    name: pendingStudentAuth.name, email: pendingStudentAuth.email,
+                    roll: 'ROLL #' + Math.floor(100 + Math.random() * 900),
+                    department: pendingStudentAuth.dept, year: '', wallet_balance: 0
+                }).select().single();
+                if (error) { showToast(error.message, 'error'); return; }
+                studentId = data.id;
+                showToast(`Account created for ${pendingStudentAuth.name}. Wallet starts at ₹0.`, 'success');
+            } else {
+                studentId = pendingStudentAuth.existingKey;
+                showToast(`Email verified. Welcome back, ${students[studentId].name}!`, 'success');
+            }
+            await loadSupabaseState();
+            activeStudentId = studentId;
+            currentUser = { role: 'student', studentId };
+            localStorage.setItem('cb_current_user', JSON.stringify(currentUser));
+            document.getElementById('login-student-email').value = '';
+            document.getElementById('reg-student-name').value = '';
+            document.getElementById('reg-student-dept').value = '';
+            pendingStudentAuth = null; setStudentAuthMode('login'); backToEmailStep1();
+            checkAuthAndRenderView();
+        }
+
+        // --- AUTHENTICATION & LOGIN LOGIC ---
+        function selectLoginRole(role) {
+            selectedLoginTab = role;
+
+            document.getElementById('login-tab-student').className = "py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900 flex flex-col sm:flex-row items-center justify-center gap-1";
+            document.getElementById('login-tab-staff').className = "py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900 flex flex-col sm:flex-row items-center justify-center gap-1";
+            document.getElementById('login-tab-desk').className = "py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900 flex flex-col sm:flex-row items-center justify-center gap-1";
+
+            document.getElementById('login-form-student').classList.add('hidden');
+            document.getElementById('login-form-staff').classList.add('hidden');
+            document.getElementById('login-form-desk').classList.add('hidden');
+
+            if (role === 'student') {
+                document.getElementById('login-tab-student').className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-1";
+                document.getElementById('login-form-student').classList.remove('hidden');
+            } else if (role === 'staff') {
+                document.getElementById('login-tab-staff').className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-1";
+                document.getElementById('login-form-staff').classList.remove('hidden');
+            } else if (role === 'desk') {
+                document.getElementById('login-tab-desk').className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-1";
+                document.getElementById('login-form-desk').classList.remove('hidden');
+            }
+        }
+
+        function handleLogin(role) {
+            if (role === 'staff') {
+                const pin = document.getElementById('login-staff-pin').value.trim();
+
+                if (pin !== '1111') {
+                    showToast('Invalid Kitchen Staff PIN.', 'error');
+                    return;
+                }
+
+                currentUser = { role: 'staff' };
+            } else if (role === 'desk') {
+                const pin = document.getElementById('login-desk-pin').value.trim();
+
+                if (pin !== '2222') {
+                    showToast('Invalid Cashier PIN.', 'error');
+                    return;
+                }
+
+                currentUser = { role: 'desk' };
+            } else {
+                return;
+            }
+
+            localStorage.setItem('cb_current_user', JSON.stringify(currentUser));
+            checkAuthAndRenderView();
+
+            showToast(
+                role === 'staff'
+                    ? 'Welcome to the Kitchen Terminal!'
+                    : 'Welcome to the Cashier Terminal!',
+                'success'
+            );
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter') return;
+
+            if (selectedLoginTab === 'student' &&
+                !document.getElementById('student-email-step-2').classList.contains('hidden')) {
+                verifyStudentEmailOTP();
+            } else if (selectedLoginTab === 'staff') {
+                handleLogin('staff');
+            } else if (selectedLoginTab === 'desk') {
+                handleLogin('desk');
+            }
+        });
+
+        function quickDemoLogin(role, identifier = 'alex@campus.edu') {
+            if (role === 'student') {
+                const existingStuKey = Object.keys(students).find(k => students[k].email && students[k].email.toLowerCase() === identifier.toLowerCase()) || 'stu_01';
+                activeStudentId = existingStuKey;
+                currentUser = { role: 'student', studentId: existingStuKey };
+            } else {
+                currentUser = { role: role };
+            }
+            localStorage.setItem('cb_current_user', JSON.stringify(currentUser));
+            checkAuthAndRenderView();
+            showToast(`Quick signed in as ${role.toUpperCase()}`, 'success');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('cb_current_user');
+            cart = [];
+            checkAuthAndRenderView();
+            showToast('Signed out successfully', 'info');
+        }
+
+        function checkAuthAndRenderView() {
+            // Hide all dashboard views initially
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-student').classList.add('hidden');
+            document.getElementById('view-staff').classList.add('hidden');
+            document.getElementById('view-desk').classList.add('hidden');
+            document.getElementById('header-auth-info').classList.add('hidden');
+            document.getElementById('header-right-actions').classList.add('hidden');
+
+            if (!currentUser) {
+                // User is not logged in -> Show Login Portal
+                document.getElementById('view-login').classList.remove('hidden');
+                return;
+            }
+
+            // User is authenticated -> Show Header Controls
+            document.getElementById('header-auth-info').classList.remove('hidden');
+            document.getElementById('header-right-actions').classList.remove('hidden');
+
+            const roleBadgeEl = document.getElementById('active-user-role-badge');
+            const nameEl = document.getElementById('active-user-display-name');
+
+            if (currentUser.role === 'student') {
+                currentRole = 'student';
+                activeStudentId = currentUser.studentId || 'stu_01';
+                
+                const stu = students[activeStudentId];
+                roleBadgeEl.className = "px-2.5 py-0.5 text-xs font-bold rounded-lg bg-brand-100 text-brand-800 border border-brand-200";
+                roleBadgeEl.innerText = "Verified Student";
+                nameEl.innerText = stu ? stu.name : 'Student';
+
+                document.getElementById('view-student').classList.remove('hidden');
+                document.getElementById('student-header-wallet').classList.remove('hidden');
+                
+                updateStudentHeaderAndWallet();
+                renderStudentOrders();
+            } else if (currentUser.role === 'staff') {
+                currentRole = 'staff';
+                
+                roleBadgeEl.className = "px-2.5 py-0.5 text-xs font-bold rounded-lg bg-amber-100 text-amber-800 border border-amber-200";
+                roleBadgeEl.innerText = "Kitchen KDS";
+                nameEl.innerText = "Kitchen Staff";
+
+                document.getElementById('view-staff').classList.remove('hidden');
+                document.getElementById('student-header-wallet').classList.add('hidden');
+                
+                renderKDSOrders();
+                renderInventoryTable();
+            } else if (currentUser.role === 'desk') {
+                currentRole = 'desk';
+
+                roleBadgeEl.className = "px-2.5 py-0.5 text-xs font-bold rounded-lg bg-blue-100 text-blue-800 border border-blue-200";
+                roleBadgeEl.innerText = "Cashier Terminal";
+                nameEl.innerText = "Cash Desk Operator";
+
+                document.getElementById('view-desk').classList.remove('hidden');
+                document.getElementById('student-header-wallet').classList.add('hidden');
+                
+                loadDeskStudentData();
+            }
+        }
+
+        function switchView(viewName) {
+            // Deprecated helper redirected to checkAuthAndRenderView
+            if (currentUser && currentUser.role === viewName) {
+                checkAuthAndRenderView();
+            }
+        }
+
+        function changeActiveUser(stuId) {
+            activeStudentId = stuId;
+            if (currentUser && currentUser.role === 'student') {
+                currentUser.studentId = stuId;
+                localStorage.setItem('cb_current_user', JSON.stringify(currentUser));
+            }
+            cart = []; // clear cart on user change
+            renderCart();
+            updateStudentHeaderAndWallet();
+            renderStudentOrders();
+        }
+
+        function updateStudentHeaderAndWallet() {
+            const stu = students[activeStudentId];
+            if (!stu) return;
+
+            document.getElementById('header-balance-display').innerText = `₹${stu.balance.toFixed(2)}`;
+            document.getElementById('student-card-balance').innerText = `₹${stu.balance.toFixed(2)}`;
+            document.getElementById('student-card-name').innerText = `${stu.name} • ${stu.dept}`;
+            
+            renderActiveWidgetSummary();
+        }
+
+
+        // Render Slot Picker
+        function renderSlotPicker() {
+            const container = document.getElementById('slot-picker-container');
+            container.innerHTML = BREAK_SLOTS.map(slot => {
+                const slotText = `${slot.label} (${slot.time})`;
+                const isSelected = selectedSlot === slotText;
+                return `
+                    <button onclick="selectSlot('${slotText}')" class="p-2 text-left rounded-xl border text-xs transition-all ${isSelected ? 'bg-brand-50 border-brand-500 text-brand-900 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}">
+                        <div class="font-semibold truncate">${slot.label}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">${slot.time}</div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectSlot(slotText) {
+            selectedSlot = slotText;
+            renderSlotPicker();
+            document.getElementById('cart-selected-slot-text').innerText = slotText;
+        }
+
+        // Render Category Filter Pills
+        function renderCategoryPills() {
+            const categories = ['ALL', 'Hot Meals', 'Snacks', 'Beverages', 'Bakery'];
+            const container = document.getElementById('category-pills');
+            container.innerHTML = categories.map(cat => {
+                const isActive = selectedCategory === cat;
+                return `
+                    <button onclick="setCategory('${cat}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${isActive ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                        ${cat}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setCategory(cat) {
+            selectedCategory = cat;
+            renderCategoryPills();
+            renderMenuGrid();
+        }
+
+        function filterMenu() {
+            renderMenuGrid();
+        }
+
+        // Render Menu Cards
+        function renderMenuGrid() {
+            const searchVal = document.getElementById('menu-search-input').value.toLowerCase();
+            const grid = document.getElementById('menu-grid');
+
+            const filtered = menuItems.filter(item => {
+                const matchesCat = selectedCategory === 'ALL' || item.category === selectedCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchVal);
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('item-count-badge').innerText = `(${filtered.length} available)`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-2 bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-400">No items match your filter criteria.</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                // Stock alert status
+                let stockBadge = '';
+                if (!item.inStock || item.stock === 0) {
+                    stockBadge = `<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-200"><i class="fa-solid fa-ban"></i> Sold Out</span>`;
+                } else if (item.stock <= 5) {
+                    stockBadge = `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300 animate-pulse-subtle"><i class="fa-solid fa-triangle-exclamation"></i> Only ${item.stock} Left!</span>`;
+                } else {
+                    stockBadge = `<span class="bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-200">${item.stock} in stock</span>`;
+                }
+
+                const isAvailable = item.inStock && item.stock > 0;
+
+                return `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+                        <div>
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="text-3xl p-2 bg-slate-50 rounded-xl border border-slate-100">${item.image}</div>
+                                ${stockBadge}
+                            </div>
+                            <h3 class="font-bold text-slate-900 text-sm mt-3">${item.name}</h3>
+                            <p class="text-[11px] text-slate-400 font-medium">${item.category}</p>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-base font-extrabold text-slate-900">₹${item.price.toFixed(2)}</span>
+                            
+                            <button onclick="addToCart('${item.id}')" ${!isAvailable ? 'disabled' : ''} class="px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${isAvailable ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm active:scale-95' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span>${isAvailable ? 'Add' : 'Unavailable'}</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+
+        // Cart Actions
+        function addToCart(itemId) {
+            const item = menuItems.find(i => String(i.id) === String(itemId));
+            if (!item || !item.inStock || item.stock <= 0) return;
+
+            const existing = cart.find(c => String(c.item.id) === String(itemId));
+            if (existing) {
+                if (existing.qty + 1 > item.stock) {
+                    showToast('Cannot add more than available stock!', 'warning');
+                    return;
+                }
+                existing.qty++;
+            } else {
+                cart.push({ item: item, qty: 1 });
+            }
+            renderCart();
+            showToast(`Added ${item.name} to cart`, 'success');
+        }
+
+        function updateCartQty(itemId, delta) {
+            const existing = cart.find(c => String(c.item.id) === String(itemId));
+            if (!existing) return;
+
+            const newQty = existing.qty + delta;
+            if (newQty <= 0) {
+                cart = cart.filter(c => c.item.id !== itemId);
+            } else {
+                if (newQty > existing.item.stock) {
+                    showToast('Limit reached based on live stock!', 'warning');
+                    return;
+                }
+                existing.qty = newQty;
+            }
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items-container');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const totalEl = document.getElementById('cart-total');
+            const actionArea = document.getElementById('checkout-action-area');
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-xs text-slate-400"><i class="fa-solid fa-basket-shopping text-2xl text-slate-300 block mb-2"></i> Your tray is empty. Add snacks to order!</div>`;
+                subtotalEl.innerText = '₹0.00';
+                totalEl.innerText = '₹0.00';
+                actionArea.innerHTML = `<button disabled class="w-full bg-slate-200 text-slate-400 font-bold py-3 rounded-xl cursor-not-allowed text-sm">Add Items to Place Order</button>`;
+                return;
+            }
+
+            let grandTotal = 0;
+            container.innerHTML = cart.map(c => {
+                const lineTotal = c.item.price * c.qty;
+                grandTotal += lineTotal;
+                return `
+                    <div class="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div class="flex-1 pr-2">
+                            <div class="font-bold text-slate-800 truncate">${c.item.name}</div>
+                            <div class="text-[11px] text-slate-500">₹${c.item.price} x ${c.qty} = <strong>₹${lineTotal}</strong></div>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg p-1">
+                            <button onclick="updateCartQty('${c.item.id}', -1)" class="w-5 h-5 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded font-bold text-xs">-</button>
+                            <span class="px-1 font-extrabold text-slate-800">${c.qty}</span>
+                            <button onclick="updateCartQty('${c.item.id}', 1)" class="w-5 h-5 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded font-bold text-xs">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            subtotalEl.innerText = `₹${grandTotal.toFixed(2)}`;
+            totalEl.innerText = `₹${grandTotal.toFixed(2)}`;
+
+            const student = students[activeStudentId];
+            if (grandTotal > student.balance) {
+                actionArea.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="bg-rose-50 border border-rose-200 rounded-xl p-2.5 text-center text-xs text-rose-700 font-semibold">
+                            <i class="fa-solid fa-circle-exclamation"></i> Insufficient Wallet Balance! (Short by ₹${(grandTotal - student.balance).toFixed(2)})
+                        </div>
+                        <button disabled class="w-full bg-rose-200 text-rose-400 font-bold py-3 rounded-xl cursor-not-allowed text-sm">Recharge at Cash Desk #01</button>
+                    </div>
+                `;
+            } else {
+                actionArea.innerHTML = `
+                    <button id="btn-place-order" onclick="placeOrder()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md shadow-brand-600/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm">
+                        <span>Confirm & Generate Cipher OTP</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                `;
+            }
+        }
+
+
+        // Place Order Logic
+        async function placeOrder() {
+            if (cart.length === 0 || !activeStudentId) return;
+            const student = students[activeStudentId];
+            if (!student) { showToast('Student account not found.', 'error'); return; }
+            const totalAmount = cart.reduce((sum, c) => sum + (c.item.price * c.qty), 0);
+            if (totalAmount > student.balance) { showToast('Insufficient wallet balance!', 'error'); return; }
+
+            // Re-read authoritative records immediately before placing the order.
+            const { data: dbStudent, error: studentError } = await supabaseClient.from('students').select('*').eq('id', activeStudentId).single();
+            if (studentError) { showToast(studentError.message, 'error'); return; }
+            const liveBalance = Number(dbStudent.wallet_balance || 0);
+            if (totalAmount > liveBalance) { await refreshAppData(); showToast('Insufficient wallet balance!', 'error'); return; }
+
+            for (const c of cart) {
+                const dbId = Number(c.item.id);
+                const { data: liveItem, error } = await supabaseClient.from('menu_items').select('*').eq('id', dbId).single();
+                if (error || !liveItem || !liveItem.in_stock || liveItem.stock < c.qty) {
+                    await refreshAppData(); showToast(`Stock changed for ${c.item.name}. Please review your cart.`, 'error'); return;
+                }
+            }
+
+            const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+            const orderId = 'ORD-' + Date.now().toString().slice(-7);
+            const { data: newOrderRow, error: orderError } = await supabaseClient.from('orders').insert({
+                order_number: orderId, student_id: activeStudentId, student_name: student.name,
+                pickup_slot: selectedSlot, total: totalAmount, status: 'RECEIVED', pickup_otp: generatedOTP
+            }).select().single();
+            if (orderError) { showToast(orderError.message, 'error'); return; }
+
+            const orderItemsPayload = cart.map(c => ({ order_id: newOrderRow.id, menu_item_id: Number(c.item.id), item_name: c.item.name, price: c.item.price, quantity: c.qty }));
+            const { error: itemsError } = await supabaseClient.from('order_items').insert(orderItemsPayload);
+            if (itemsError) {
+                await supabaseClient.from('orders').delete().eq('id', newOrderRow.id);
+                showToast(itemsError.message, 'error'); return;
+            }
+
+            const newBalance = liveBalance - totalAmount;
+            const { error: balanceError } = await supabaseClient.from('students').update({ wallet_balance: newBalance }).eq('id', activeStudentId);
+            if (balanceError) { showToast(balanceError.message, 'error'); return; }
+
+            const { error: ledgerError } = await supabaseClient.from('wallet_transactions').insert({
+                student_id: activeStudentId, type: 'DEBIT', amount: totalAmount,
+                description: `Food Order #${orderId} (${orderItemsPayload.length} items)`, balance_after: newBalance
+            });
+            if (ledgerError) { showToast(ledgerError.message, 'error'); return; }
+
+            for (const c of cart) {
+                const dbId = Number(c.item.id);
+                const { data: liveItem } = await supabaseClient.from('menu_items').select('stock').eq('id', dbId).single();
+                const newStock = Math.max(0, Number(liveItem.stock) - c.qty);
+                await supabaseClient.from('menu_items').update({ stock: newStock, in_stock: newStock > 0 }).eq('id', dbId);
+            }
+
+            await refreshAppData();
+            cart = [];
+            renderCart();
+            showToast(`Order #${orderId} Placed! Pickup OTP: ${generatedOTP}`, 'success');
+        }
+
+        // Render Active Order Quick Status Widget on Student View
+        function renderActiveWidgetSummary() {
+            const container = document.getElementById('active-order-summary-widget');
+            const activeOrder = orders.find(o => o.studentId === activeStudentId && o.status !== 'COMPLETED');
+
+            if (!activeOrder) {
+                container.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                            <i class="fa-solid fa-ticket text-brand-600"></i> Active Cipher OTP
+                        </h3>
+                        <span class="text-[11px] font-semibold text-slate-400">Idle</span>
+                    </div>
+                    <div class="my-auto py-3 text-center">
+                        <p class="text-xs text-slate-400">No pending orders. Order snacks above to generate your single-use pickup code.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Status Badge Config
+            let statusBadge = '';
+            if (activeOrder.status === 'RECEIVED') {
+                statusBadge = `<span class="bg-blue-100 text-blue-700 font-bold px-2.5 py-0.5 rounded-full text-xs"><i class="fa-solid fa-spinner animate-spin"></i> Received</span>`;
+            } else if (activeOrder.status === 'PREPARING') {
+                statusBadge = `<span class="bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full text-xs"><i class="fa-solid fa-fire-burner"></i> Preparing</span>`;
+            } else if (activeOrder.status === 'READY') {
+                statusBadge = `<span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full text-xs animate-bounce"><i class="fa-solid fa-bell"></i> Ready for Pickup!</span>`;
+            }
+
+            container.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-cat text-amber-500"></i> Pickup Cipher Security
+                    </h3>
+                    ${statusBadge}
+                </div>
+                <div class="flex items-center justify-between my-2 bg-amber-50 border border-amber-200/80 rounded-xl p-3">
+                    <div>
+                        <div class="text-[10px] text-amber-700 uppercase font-bold tracking-wider">Single-Use Pickup OTP</div>
+                        <div class="text-2xl font-mono font-black text-amber-900 tracking-widest">${activeOrder.otp}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs font-bold text-slate-800">${activeOrder.id}</div>
+                        <div class="text-[11px] text-slate-500">${activeOrder.slot}</div>
+                    </div>
+                </div>
+                <div class="text-[11px] text-slate-500 flex justify-between items-center">
+                    <span>Show PIN at window when status is Ready.</span>
+                    <strong class="text-slate-800">₹${activeOrder.total.toFixed(2)}</strong>
+                </div>
+            `;
+        }
+
+
+        // Render Student Orders Progress Tracker List
+        function renderStudentOrders() {
+            const container = document.getElementById('student-orders-list');
+            const studentOrders = orders.filter(o => o.studentId === activeStudentId);
+
+            if (studentOrders.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center py-8 text-xs text-slate-400">No active or previous orders found for this student.</div>`;
+                return;
+            }
+
+            container.innerHTML = studentOrders.map(order => {
+                // Step Progress Calculation
+                let step1 = 'bg-brand-600 text-white';
+                let step2 = 'bg-slate-200 text-slate-500';
+                let step3 = 'bg-slate-200 text-slate-500';
+
+                if (order.status === 'PREPARING' || order.status === 'READY' || order.status === 'COMPLETED') {
+                    step2 = 'bg-amber-500 text-white';
+                }
+                if (order.status === 'READY' || order.status === 'COMPLETED') {
+                    step3 = 'bg-emerald-600 text-white';
+                }
+
+                return `
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                            <div>
+                                <span class="font-bold text-slate-900 text-xs">${order.id}</span>
+                                <span class="text-[11px] text-slate-400 ml-2">${order.timestamp}</span>
+                            </div>
+                            <span class="font-extrabold text-xs text-brand-700">₹${order.total.toFixed(2)}</span>
+                        </div>
+
+                        <!-- Progress Bar Stages -->
+                        <div class="grid grid-cols-3 gap-1 text-center text-[10px] font-bold">
+                            <div class="p-1.5 rounded-lg ${step1}">1. Received</div>
+                            <div class="p-1.5 rounded-lg ${step2}">2. Preparing</div>
+                            <div class="p-1.5 rounded-lg ${step3}">3. Pickup Ready</div>
+                        </div>
+
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200/80 text-xs space-y-1">
+                            <div class="font-semibold text-slate-700 mb-1">Target Slot: <span class="text-brand-700">${order.slot}</span></div>
+                            <div class="text-[11px] text-slate-500">
+                                ${order.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs pt-1">
+                            <div class="flex items-center gap-1 text-amber-700 font-mono font-extrabold bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                                <i class="fa-solid fa-key text-[10px]"></i> OTP: ${order.otp}
+                            </div>
+                            <span class="text-[11px] text-slate-500">Status: <strong>${order.status}</strong></span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+
+        // --- 3. KITCHEN DISPLAY SYSTEM (KDS) & INVENTORY ---
+        let currentKDSFilter = 'ALL';
+
+        function switchStaffTab(tabName) {
+            document.getElementById('staff-tab-orders').classList.add('hidden');
+            document.getElementById('staff-tab-inventory').classList.add('hidden');
+
+            document.getElementById('tab-kds-orders').className = "px-5 py-3 border-b-2 border-transparent font-bold text-xs text-slate-500 hover:text-slate-800 flex items-center gap-2";
+            document.getElementById('tab-kds-inventory').className = "px-5 py-3 border-b-2 border-transparent font-bold text-xs text-slate-500 hover:text-slate-800 flex items-center gap-2";
+
+            if (tabName === 'orders') {
+                document.getElementById('staff-tab-orders').classList.remove('hidden');
+                document.getElementById('tab-kds-orders').className = "px-5 py-3 border-b-2 border-brand-600 font-bold text-xs text-brand-600 flex items-center gap-2";
+            } else {
+                document.getElementById('staff-tab-inventory').classList.remove('hidden');
+                document.getElementById('tab-kds-inventory').className = "px-5 py-3 border-b-2 border-brand-600 font-bold text-xs text-brand-600 flex items-center gap-2";
+            }
+        }
+
+        function filterKDSOrders(status) {
+            currentKDSFilter = status;
+            renderKDSOrders();
+        }
+
+        function renderKDSOrders() {
+            const grid = document.getElementById('kds-orders-grid');
+            
+            // Counts
+            const countRec = orders.filter(o => o.status === 'RECEIVED').length;
+            const countPrep = orders.filter(o => o.status === 'PREPARING').length;
+            const countReady = orders.filter(o => o.status === 'READY').length;
+
+            document.getElementById('count-received').innerText = countRec;
+            document.getElementById('count-preparing').innerText = countPrep;
+            document.getElementById('count-ready').innerText = countReady;
+            document.getElementById('kds-pending-count').innerText = countRec + countPrep + countReady;
+
+            const filtered = orders.filter(o => {
+                if (currentKDSFilter === 'ALL') return true;
+                return o.status === currentKDSFilter;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-3 bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-400">No orders match this status filter.</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(order => {
+                let statusBadge = '';
+                let actionButtons = '';
+
+                if (order.status === 'RECEIVED') {
+                    statusBadge = `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">Received</span>`;
+                    actionButtons = `
+                        <button onclick="updateOrderStatus('${order.id}', 'PREPARING')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-fire-burner"></i> Start Preparing
+                        </button>
+                    `;
+                } else if (order.status === 'PREPARING') {
+                    statusBadge = `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">Preparing</span>`;
+                    actionButtons = `
+                        <button onclick="updateOrderStatus('${order.id}', 'READY')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-bell"></i> Mark Ready for Pickup
+                        </button>
+                    `;
+                } else if (order.status === 'READY') {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">Ready for Pickup</span>`;
+                    actionButtons = `
+                        <button onclick="openOTPVerificationModal('${order.id}')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-key text-amber-400"></i> Verify Pickup OTP Cipher
+                        </button>
+                    `;
+                } else {
+                    statusBadge = `<span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full">Completed</span>`;
+                    actionButtons = `<div class="text-center text-xs text-slate-400 font-semibold py-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> Handed over to student</div>`;
+                }
+
+                return `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3 flex flex-col justify-between">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                                <div>
+                                    <span class="font-extrabold text-slate-900 text-sm">${order.id}</span>
+                                    <span class="text-[11px] text-slate-400 block">${order.studentName}</span>
+                                </div>
+                                ${statusBadge}
+                            </div>
+
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs space-y-1">
+                                <div class="text-[11px] font-bold text-slate-600">Slot: <span class="text-brand-700">${order.slot}</span></div>
+                                <ul class="list-disc list-inside text-[11px] text-slate-700 space-y-0.5 pt-1">
+                                    ${order.items.map(i => `<li><strong>${i.qty}x</strong> ${i.name}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-100 space-y-2">
+                            <div class="flex justify-between items-center text-xs text-slate-500">
+                                <span>Total Amount: <strong class="text-slate-800">₹${order.total.toFixed(2)}</strong></span>
+                                <span>Ordered: ${order.timestamp}</span>
+                            </div>
+                            ${actionButtons}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('order_number', orderId);
+            if (error) { showToast(error.message, 'error'); return; }
+            await refreshAppData();
+            showToast(`Order #${orderId} moved to ${newStatus}`, 'info');
+        }
+
+
+        // OTP Verification Modal Handlers
+        function openOTPVerificationModal(orderId) {
+            pendingVerifyingOrderId = orderId;
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            document.getElementById('otp-modal-order-id').innerText = `#${order.id}`;
+            document.getElementById('otp-modal-student-name').innerText = order.studentName;
+            document.getElementById('otp-modal-items-summary').innerText = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+            document.getElementById('otp-input-field').value = '';
+            document.getElementById('otp-error-msg').classList.add('hidden');
+
+            document.getElementById('modal-otp-verify').classList.remove('hidden');
+        }
+
+        async function confirmOTPAndDeliver() {
+            const entered = document.getElementById('otp-input-field').value.trim();
+            const order = orders.find(o => o.id === pendingVerifyingOrderId);
+
+            if (!order || entered !== order.otp) {
+                document.getElementById('otp-error-msg').classList.remove('hidden');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('orders').update({ status: 'COMPLETED' }).eq('order_number', order.id);
+            if (error) { showToast(error.message, 'error'); return; }
+            closeModal('modal-otp-verify');
+            await refreshAppData();
+            showToast(`Order #${order.id} OTP Verified! Food Handed Over.`, 'success');
+        }
+
+
+        // Inventory Management Panel Logic
+        function renderInventoryTable() {
+            const tbody = document.getElementById('inventory-table-body');
+            tbody.innerHTML = menuItems.map(item => {
+                let stockClass = "text-slate-800 font-bold";
+                if (item.stock <= 5 && item.stock > 0) stockClass = "text-amber-600 font-extrabold";
+                if (item.stock === 0) stockClass = "text-rose-600 font-extrabold";
+
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3 px-4 font-bold text-slate-800 flex items-center gap-2">
+                            <span class="text-lg">${item.image}</span>
+                            <span>${item.name}</span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-500">${item.category}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">₹${item.price.toFixed(2)}</td>
+                        <td class="py-3 px-4 ${stockClass}">${item.stock} units</td>
+                        <td class="py-3 px-4">
+                            <button onclick="toggleItemInStock('${item.id}')" class="px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${item.inStock ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}">
+                                ${item.inStock ? 'In Stock' : 'Sold Out'}
+                            </button>
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <div class="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                                <button onclick="adjustInventoryStock('${item.id}', -1)" class="w-6 h-6 bg-white rounded text-slate-700 font-bold hover:bg-slate-200 flex items-center justify-center">-</button>
+                                <span class="px-2 font-bold text-slate-800">${item.stock}</span>
+                                <button onclick="adjustInventoryStock('${item.id}', 1)" class="w-6 h-6 bg-white rounded text-slate-700 font-bold hover:bg-slate-200 flex items-center justify-center">+</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function toggleItemInStock(itemId) {
+            const item = menuItems.find(i => String(i.id) === String(itemId));
+            if (!item) return;
+            const newInStock = !item.inStock;
+            const newStock = newInStock && item.stock === 0 ? 10 : item.stock;
+            const { error } = await supabaseClient.from('menu_items').update({ in_stock: newInStock, stock: newStock }).eq('id', Number(itemId));
+            if (error) { showToast(error.message, 'error'); return; }
+            await refreshAppData();
+        }
+
+        async function adjustInventoryStock(itemId, delta) {
+            const item = menuItems.find(i => String(i.id) === String(itemId));
+            if (!item) return;
+            const stock = Math.max(0, item.stock + delta);
+            const { error } = await supabaseClient.from('menu_items').update({ stock, in_stock: stock > 0 }).eq('id', Number(itemId));
+            if (error) { showToast(error.message, 'error'); return; }
+            await refreshAppData();
+        }
+
+        async function resetDailyMenuTemplate() {
+            for (const template of MASTER_MENU_TEMPLATE) {
+                const item = menuItems.find(m => m.name === template.name);
+                if (item) {
+                    await supabaseClient.from('menu_items').update({ stock: template.initialStock, initial_stock: template.initialStock, in_stock: true }).eq('id', Number(item.id));
+                }
+            }
+            await refreshAppData();
+            showToast('Daily Menu & Stock Reset Completed!', 'success');
+        }
+
+
+        // --- 4. CASH DESK TERMINAL LOGIC ---
+        function populateDeskStudentsDropdown() {
+            const select = document.getElementById('desk-student-select');
+            select.innerHTML = Object.values(students).map(stu => `
+                <option value="${stu.id}">${stu.name} (${stu.roll}) - Dept: ${stu.dept}</option>
+            `).join('');
+        }
+
+        function loadDeskStudentData() {
+            const stuId = document.getElementById('desk-student-select').value || activeStudentId;
+            const stu = students[stuId];
+            if (!stu) return;
+
+            document.getElementById('desk-card-roll').innerText = stu.roll;
+            document.getElementById('desk-card-name').innerText = stu.name;
+            document.getElementById('desk-card-balance').innerText = `₹${stu.balance.toFixed(2)}`;
+            document.getElementById('desk-card-dept').innerText = stu.dept;
+        }
+
+        function setTopUpAmount(amount) {
+            document.getElementById('topup-amount-input').value = amount;
+        }
+
+        async function processCashTopUp() {
+            const stuId = document.getElementById('desk-student-select').value;
+            const amount = parseFloat(document.getElementById('topup-amount-input').value);
+            if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid cash amount', 'warning'); return; }
+            const { data: stu, error: studentError } = await supabaseClient.from('students').select('*').eq('id', stuId).single();
+            if (studentError || !stu) { showToast(studentError?.message || 'Student not found.', 'error'); return; }
+            const newBalance = Number(stu.wallet_balance || 0) + amount;
+            const { error: updateError } = await supabaseClient.from('students').update({ wallet_balance: newBalance }).eq('id', stuId);
+            if (updateError) { showToast(updateError.message, 'error'); return; }
+            const { error: ledgerError } = await supabaseClient.from('wallet_transactions').insert({
+                student_id: stuId, type: 'CREDIT', amount, description: 'Cash Deposit at Desk #01', balance_after: newBalance
+            });
+            if (ledgerError) { showToast(ledgerError.message, 'error'); return; }
+            await refreshAppData();
+            loadDeskStudentData();
+            document.getElementById('topup-amount-input').value = '';
+            showToast(`Credited ₹${amount} to ${stu.name}'s wallet!`, 'success');
+        }
+
+        // --- 5. LEDGERS & EOD REPORTS ---
+        function openLedgerModal() {
+            const stu = students[activeStudentId];
+            const history = ledgers[activeStudentId] || [];
+
+            document.getElementById('ledger-student-name').innerText = `${stu.name} (${stu.roll})`;
+            document.getElementById('ledger-student-balance').innerText = `₹${stu.balance.toFixed(2)}`;
+
+            const container = document.getElementById('ledger-history-list');
+            if (history.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">No transactions recorded yet.</div>`;
+            } else {
+                container.innerHTML = history.map(t => {
+                    const isCredit = t.type === 'CREDIT';
+                    return `
+                        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${isCredit ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                    <i class="fa-solid ${isCredit ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-800">${t.desc}</div>
+                                    <div class="text-[10px] text-slate-400">${t.date} • ID: ${t.id}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-extrabold ${isCredit ? 'text-emerald-600' : 'text-slate-900'}">${isCredit ? '+' : '-'}₹${t.amount.toFixed(2)}</div>
+                                <div class="text-[10px] text-slate-400">Bal: ₹${t.balanceAfter.toFixed(2)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('modal-ledger').classList.remove('hidden');
+        }
+
+        function openEODReportModal() {
+            document.getElementById('eod-report-date').innerText = `Generated on ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })}`;
+
+            // Metrics calculation
+            let totalRev = orders.reduce((sum, o) => sum + o.total, 0);
+            let totalCompleted = orders.length;
+
+            let leftoverItemsCount = menuItems.reduce((sum, item) => sum + item.stock, 0);
+
+            document.getElementById('eod-metric-revenue').innerText = `₹${totalRev.toFixed(2)}`;
+            document.getElementById('eod-metric-orders').innerText = `${totalCompleted} orders`;
+            document.getElementById('eod-metric-wasted').innerText = `${leftoverItemsCount} units remaining`;
+
+            // Break slot breakdown
+            const slotCounts = {};
+            orders.forEach(o => {
+                slotCounts[o.slot] = (slotCounts[o.slot] || 0) + 1;
+            });
+
+            const slotContainer = document.getElementById('eod-slot-breakdown');
+            slotContainer.innerHTML = BREAK_SLOTS.map(slot => {
+                const count = slotCounts[`${slot.label} (${slot.time})`] || 0;
+                const pct = totalCompleted > 0 ? Math.round((count / totalCompleted) * 100) : 0;
+                return `
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-600">${slot.label} (${slot.time})</span>
+                        <div class="flex items-center gap-2">
+                            <div class="w-24 bg-slate-200 h-2 rounded-full overflow-hidden">
+                                <div class="bg-indigo-600 h-full" style="width: ${pct}%"></div>
+                            </div>
+                            <span class="font-bold text-slate-800 w-8 text-right">${count}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Bestsellers table
+            const itemSales = {};
+            orders.forEach(o => {
+                o.items.forEach(i => {
+                    if (!itemSales[i.name]) itemSales[i.name] = { qty: 0, revenue: 0 };
+                    itemSales[i.name].qty += i.qty;
+                    itemSales[i.name].revenue += (i.qty * i.price);
+                });
+            });
+
+            const bestsellers = Object.keys(itemSales).map(k => ({ name: k, ...itemSales[k] }))
+                .sort((a, b) => b.qty - a.qty);
+
+            const bestTable = document.getElementById('eod-bestsellers-table');
+            if (bestsellers.length === 0) {
+                bestTable.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-slate-400">No food sales recorded today yet.</td></tr>`;
+            } else {
+                bestTable.innerHTML = bestsellers.map(b => `
+                    <tr>
+                        <td class="p-2.5 font-bold text-slate-800">${b.name}</td>
+                        <td class="p-2.5 text-center font-bold text-slate-700">${b.qty}</td>
+                        <td class="p-2.5 text-right font-extrabold text-brand-700">₹${b.revenue.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('modal-eod-report').classList.remove('hidden');
+        }
+
+        // Modal Helper
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Custom Toast System (Replaces browser alert)
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            let bg = 'bg-slate-900 text-white';
+            if (type === 'success') bg = 'bg-emerald-600 text-white';
+            if (type === 'warning') bg = 'bg-amber-600 text-white';
+            if (type === 'error') bg = 'bg-rose-600 text-white';
+
+            toast.className = `fixed bottom-5 right-5 z-50 ${bg} px-4 py-3 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
